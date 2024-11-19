@@ -1,0 +1,1 @@
+SELECT id, email, password FROM accounts WHERE id = $1 FOR UPDATE;
