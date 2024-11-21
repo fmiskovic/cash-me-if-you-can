@@ -14,7 +14,7 @@ import (
 
 	"github.com/softika/slogging"
 
-	"github.com/softika/gopherizer/config"
+	"github.com/fmiskovic/cash-me-if-you-can/config"
 )
 
 //go:embed migrations/*.sql

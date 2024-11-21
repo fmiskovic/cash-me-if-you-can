@@ -6,7 +6,7 @@ import (
 
 	"github.com/pressly/goose/v3"
 
-	"github.com/softika/gopherizer/database"
+	"github.com/fmiskovic/cash-me-if-you-can/database"
 )
 
 // migrate runs all migration scripts inside the migrations folder.

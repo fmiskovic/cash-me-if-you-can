@@ -1,4 +1,4 @@
-module github.com/softika/gopherizer
+module github.com/fmiskovic/cash-me-if-you-can
 
 go 1.23.2
 

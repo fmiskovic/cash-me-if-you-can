@@ -3,46 +3,42 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/softika/gopherizer/internal/account"
+	"github.com/fmiskovic/cash-me-if-you-can/internal"
+	"github.com/fmiskovic/cash-me-if-you-can/internal/account"
 )
 
-func (s *E2ETestSuite) TestRegisterAccount() {
+func (s *E2ETestSuite) TestCreateAccount() {
 	tests := []struct {
 		name     string
-		input    account.RegisterRequest
+		input    account.CreateRequest
 		wantCode int
 	}{
 		{
 			name: "valid request",
-			input: account.RegisterRequest{
-				Email:    "account1@test.com",
-				Password: "Password1234!",
+			input: account.CreateRequest{
+				Balance: 100.12345,
+				Owner:   "John Doe",
 			},
 			wantCode: http.StatusCreated,
 		},
 		{
-			name: "invalid email",
-			input: account.RegisterRequest{
-				Email:    "account1",
-				Password: "Password1234!",
+			name: "missing owner",
+			input: account.CreateRequest{
+				Balance: 100.12345,
 			},
 			wantCode: http.StatusBadRequest,
 		},
 		{
-			name: "invalid password",
-			input: account.RegisterRequest{
-				Email:    "account1@test.com",
-				Password: "Pass", // too short
+			name: "negative initial balance",
+			input: account.CreateRequest{
+				Balance: -100.12345,
+				Owner:   "John Doe",
 			},
-			wantCode: http.StatusBadRequest,
-		},
-		{
-			name:     "empty request",
-			input:    account.RegisterRequest{},
 			wantCode: http.StatusBadRequest,
 		},
 	}
@@ -55,7 +51,7 @@ func (s *E2ETestSuite) TestRegisterAccount() {
 			reqBody, err := json.Marshal(tt.input)
 			s.NoError(err)
 
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/account/register", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(http.MethodPost, "/accounts", bytes.NewReader(reqBody))
 			w := httptest.NewRecorder()
 
 			s.router.ServeHTTP(w, req)
@@ -66,61 +62,43 @@ func (s *E2ETestSuite) TestRegisterAccount() {
 				return
 			}
 
-			var resp account.RegisterResponse
+			var resp account.Details
 			err = json.NewDecoder(w.Body).Decode(&resp)
 			s.NoError(err)
 
 			s.NotEmpty(resp.AccountId)
+			s.Equal(tt.input.Balance, resp.Balance)
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestLoginAccount() {
+func (s *E2ETestSuite) TestGetAccountDetails() {
 	tests := []struct {
-		name     string
-		input    account.LoginRequest
-		wantCode int
+		name      string
+		accountId string
+		wantCode  int
+		wantResp  account.Details
 	}{
 		{
-			name: "valid request",
-			input: account.LoginRequest{
-				Email:    "john@mail.com",
-				Password: "password",
+			name:      "valid request",
+			accountId: "2f6f112a-a8e2-42c3-a6b0-c15e86d01704",
+			wantCode:  http.StatusOK,
+			wantResp: account.Details{
+				AccountId: "2f6f112a-a8e2-42c3-a6b0-c15e86d01704",
+				Owner:     "David",
+				Balance:   0.0000,
 			},
-			wantCode: http.StatusOK,
 		},
 		{
-			name: "invalid email",
-			input: account.LoginRequest{
-				Email:    "john",
-				Password: "password",
-			},
-			wantCode: http.StatusBadRequest,
-		},
-		{
-			name: "invalid password",
-			input: account.LoginRequest{
-				Email:    "john@mail.com",
-				Password: "invalid",
-			},
-			wantCode: http.StatusBadRequest,
-		},
-		{
-			name:     "empty request",
-			input:    account.LoginRequest{},
-			wantCode: http.StatusBadRequest,
+			name:      "non-existing account",
+			accountId: "2f6f112a-a8e2-42c3-a6b0-c15e86d01705",
+			wantCode:  http.StatusNotFound,
 		},
 	}
 
-	for _, tc := range tests {
-		tt := tc
+	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			reqBody, err := json.Marshal(tt.input)
-			s.NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, "/api/v1/account/login", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(http.MethodGet, "/accounts/"+tt.accountId, nil)
 			w := httptest.NewRecorder()
 
 			s.router.ServeHTTP(w, req)
@@ -131,11 +109,58 @@ func (s *E2ETestSuite) TestLoginAccount() {
 				return
 			}
 
-			var resp account.LoginResponse
-			err = json.NewDecoder(w.Body).Decode(&resp)
+			var resp account.Details
+			err := json.NewDecoder(w.Body).Decode(&resp)
 			s.NoError(err)
 
-			s.NotEmpty(resp.Token)
+			s.Equal(tt.wantResp, resp)
+		})
+	}
+}
+
+func (s *E2ETestSuite) TestListAccounts() {
+	tests := []struct {
+		name     string
+		req      internal.PageRequest
+		wantCode int
+	}{
+		{
+			name:     "full page request",
+			req:      internal.DefaultPageRequest(),
+			wantCode: http.StatusOK,
+		},
+		{
+			name: "two accounts per page",
+			req: internal.PageRequest{
+				Limit:  2,
+				Offset: 0,
+			},
+			wantCode: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			queryParams := fmt.Sprintf("?limit=%d&offset=%d", tt.req.Limit, tt.req.Offset)
+			req := httptest.NewRequest(http.MethodGet, "/accounts"+queryParams, nil)
+			w := httptest.NewRecorder()
+
+			s.router.ServeHTTP(w, req)
+
+			s.Equal(tt.wantCode, w.Code)
+
+			if tt.wantCode != http.StatusOK {
+				return
+			}
+
+			var page internal.Page[account.Details]
+			err := json.NewDecoder(w.Body).Decode(&page)
+			s.NoError(err)
+
+			s.NotEmpty(page.Items)
+			s.True(len(page.Items) <= tt.req.Limit)
+			s.True(page.TotalItems > 0)
+			s.True(page.TotalPages > 0)
 		})
 	}
 }

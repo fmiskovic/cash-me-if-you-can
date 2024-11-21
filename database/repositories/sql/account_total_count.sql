@@ -1,0 +1,1 @@
+SELECT COUNT(a.id) FROM accounts AS a;

@@ -11,9 +11,10 @@ package mock
 
 import (
 	context "context"
-	account "github.com/softika/gopherizer/internal/account"
 	reflect "reflect"
 
+	internal "github.com/fmiskovic/cash-me-if-you-can/internal"
+	account "github.com/fmiskovic/cash-me-if-you-can/internal/account"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,46 +41,47 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// ChangePassword mocks base method.
-func (m *MockRepository) ChangePassword(ctx context.Context, id, oldPassword, newPassword string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", ctx, id, oldPassword, newPassword)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockRepositoryMockRecorder) ChangePassword(ctx, id, oldPassword, newPassword any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockRepository)(nil).ChangePassword), ctx, id, oldPassword, newPassword)
-}
-
 // Create mocks base method.
-func (m *MockRepository) Create(ctx context.Context, a *account.Account) (*account.Account, error) {
+func (m *MockRepository) Create(arg0 context.Context, arg1 *account.Account) (*account.Account, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", ctx, a)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1)
 	ret0, _ := ret[0].(*account.Account)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockRepositoryMockRecorder) Create(ctx, a any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Create(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepository)(nil).Create), ctx, a)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepository)(nil).Create), arg0, arg1)
 }
 
-// GetByEmail mocks base method.
-func (m *MockRepository) GetByEmail(ctx context.Context, email string) (*account.Identity, error) {
+// Get mocks base method.
+func (m *MockRepository) Get(arg0 context.Context, arg1 string) (*account.Account, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
-	ret0, _ := ret[0].(*account.Identity)
+	ret := m.ctrl.Call(m, "Get", arg0, arg1)
+	ret0, _ := ret[0].(*account.Account)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByEmail indicates an expected call of GetByEmail.
-func (mr *MockRepositoryMockRecorder) GetByEmail(ctx, email any) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockRepositoryMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockRepository)(nil).GetByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), arg0, arg1)
+}
+
+// List mocks base method.
+func (m *MockRepository) List(arg0 context.Context, arg1 internal.PageRequest) (internal.Page[account.Account], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", arg0, arg1)
+	ret0, _ := ret[0].(internal.Page[account.Account])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockRepositoryMockRecorder) List(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepository)(nil).List), arg0, arg1)
 }

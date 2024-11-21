@@ -10,8 +10,8 @@ import (
 
 	"github.com/softika/slogging"
 
-	"github.com/softika/gopherizer/api"
-	"github.com/softika/gopherizer/config"
+	"github.com/fmiskovic/cash-me-if-you-can/api"
+	"github.com/fmiskovic/cash-me-if-you-can/config"
 )
 
 func Run() {

@@ -5,43 +5,139 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/softika/gopherizer/database/repositories/account"
-	model "github.com/softika/gopherizer/internal/account"
+	"github.com/fmiskovic/cash-me-if-you-can/database/repositories"
+	"github.com/fmiskovic/cash-me-if-you-can/internal"
+	"github.com/fmiskovic/cash-me-if-you-can/internal/account"
 )
 
-func (s *RepositoriesTestSuite) TestAccountRepository_Create() {
-	repo := account.NewRepository(s.dbService)
+func (s *RepositoriesTestSuite) TestGetAccount() {
+	repo := repositories.NewAccountRepository(s.dbService)
 
 	tests := []struct {
 		name    string
-		input   *model.Account
+		id      string
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name:    "valid account",
+			id:      "a1b2c3d4-1111-2222-3333-444455556666",
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "non-existing account",
+			id:      "a1b2c3d4-1111-2222-3333-000000000000",
+			wantErr: assert.Error,
+		},
+		{
+			name:    "empty id",
+			id:      "",
+			wantErr: assert.Error,
+		},
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			acc, err := repo.Get(s.dbContainer.Ctx, tt.id)
+
+			tt.wantErr(t, err, "Get() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				return
+			}
+
+			s.Assert().NotEmpty(acc.ID)
+		})
+	}
+}
+
+func (s *RepositoriesTestSuite) TestListAccounts() {
+	repo := repositories.NewAccountRepository(s.dbService)
+
+	tests := []struct {
+		name    string
+		input   internal.PageRequest
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "two accounts per page",
+			input: internal.PageRequest{
+				Limit:  2,
+				Offset: 0,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "all accounts at the page",
+			input: internal.PageRequest{
+				Limit:  10,
+				Offset: 0,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "empty page",
+			input: internal.PageRequest{
+				Limit:  10,
+				Offset: 10,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "empty page when page request is empty",
+			input:   internal.PageRequest{},
+			wantErr: assert.NoError,
+		},
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			page, err := repo.List(s.dbContainer.Ctx, tt.input)
+
+			tt.wantErr(t, err, "List() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				return
+			}
+
+			s.Assert().NotEmpty(page)
+			s.Assert().True(len(page.Items) <= tt.input.Limit)
+			s.Assert().True(page.TotalItems > 0)
+		})
+	}
+}
+
+func (s *RepositoriesTestSuite) TestCreateAccount() {
+	repo := repositories.NewAccountRepository(s.dbService)
+
+	tests := []struct {
+		name    string
+		input   *account.Account
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
 			name: "valid account",
-			input: &model.Account{
-				Email:    "acc1@fake.com",
-				Password: "password",
+			input: &account.Account{
+				Owner:   "Mark",
+				Balance: 73.444416,
 			},
 			wantErr: assert.NoError,
 		},
 		{
 			name:    "empty input",
-			input:   &model.Account{},
+			input:   &account.Account{},
 			wantErr: assert.Error,
 		},
 		{
-			name: "invalid email",
-			input: &model.Account{
-				Email:    "invalid-email",
-				Password: "password",
+			name: "empty owner",
+			input: &account.Account{
+				Owner:   " ",
+				Balance: 11.0001,
 			},
 			wantErr: assert.Error,
 		},
 		{
-			name: "existing email",
-			input: &model.Account{
-				Email: "john@mail.com",
+			name: "existing owner",
+			input: &account.Account{
+				Owner:   "Alice",
+				Balance: 11.0001,
 			},
 			wantErr: assert.Error,
 		},
@@ -56,110 +152,18 @@ func (s *RepositoriesTestSuite) TestAccountRepository_Create() {
 				return
 			}
 
-			s.Assert().NotEmpty(acc.Id)
-			s.Assert().NotEmpty(acc.CreatedAt)
-			s.Assert().NotEmpty(acc.UpdatedAt)
-			s.Assert().Equal(tt.input.Email, acc.Email)
-			s.Assert().Equal(tt.input.Password, acc.Password)
-		})
-	}
-}
+			s.Assert().NotEmpty(acc.ID)
+			s.Assert().Equal(tt.input.Owner, acc.Owner)
+			s.Assert().Equal(tt.input.Balance, acc.Balance)
 
-func (s *RepositoriesTestSuite) TestAccountRepository_GetByEmail() {
-	repo := account.NewRepository(s.dbService)
+			// assert if balance is correctly stored in the database
+			got, err := repo.Get(s.dbContainer.Ctx, acc.ID)
+			s.Assert().NoError(err)
+			s.Assert().Equal(tt.input.Balance, got.Balance)
 
-	tests := []struct {
-		name    string
-		email   string
-		wantErr assert.ErrorAssertionFunc
-	}{
-		{
-			name:    "valid email",
-			email:   "john@mail.com",
-			wantErr: assert.NoError,
-		},
-		{
-			name:    "invalid email",
-			email:   "invalid-email",
-			wantErr: assert.Error,
-		},
-		{
-			name:    "non-existent email",
-			email:   "tester@fake.com",
-			wantErr: assert.Error,
-		},
-		{
-			name:    "empty email",
-			email:   "",
-			wantErr: assert.Error,
-		},
-	}
-
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			identity, err := repo.GetByEmail(s.dbContainer.Ctx, tt.email)
-
-			tt.wantErr(t, err, "GetByEmail() error = %v, wantErr %v", err, tt.wantErr)
-			if err != nil {
-				return
-			}
-
-			s.Assert().NotEmpty(identity.AccountId)
-			s.Assert().NotEmpty(identity.Email)
-			s.Assert().NotEmpty(identity.Password)
-			s.Assert().Equal(tt.email, identity.Email)
-			s.Assert().NotEmpty(identity.Roles)
-		})
-	}
-}
-
-func (s *RepositoriesTestSuite) TestRepository_ChangePassword() {
-	repo := account.NewRepository(s.dbService)
-
-	type args struct {
-		id          string
-		oldPassword string
-		newPassword string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr assert.ErrorAssertionFunc
-	}{
-		{
-			name: "valid password change",
-			args: args{
-				id:          "2f6f112a-a8e2-42c3-a6b0-c15e86d01704",
-				oldPassword: "password",
-				newPassword: "new-password",
-			},
-			wantErr: assert.NoError,
-		},
-		{
-			name: "invalid old password",
-			args: args{
-				id:          "2f6f112a-a8e2-42c3-a6b0-c15e86d01704",
-				oldPassword: "invalid-password",
-				newPassword: "new-password",
-			},
-			wantErr: assert.Error,
-		},
-		{
-			name: "invalid id",
-			args: args{
-				id:          "invalid-id",
-				oldPassword: "password",
-				newPassword: "new-password",
-			},
-			wantErr: assert.Error,
-		},
-	}
-
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			err := repo.ChangePassword(s.dbContainer.Ctx, tt.args.id, tt.args.oldPassword, tt.args.newPassword)
-
-			tt.wantErr(t, err, "ChangePassword() error = %v, wantErr %v", err, tt.wantErr)
+			// cleanup
+			err = repo.Delete(s.dbContainer.Ctx, acc.ID)
+			s.Assert().NoError(err)
 		})
 	}
 }

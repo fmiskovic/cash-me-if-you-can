@@ -1,13 +1,7 @@
 package account
 
-type RegisterResponse struct {
-	AccountId string `json:"account_id"`
-}
-
-type LoginResponse struct {
-	Token string `json:"token"`
-}
-
-type ChangePasswordResponse struct {
-	AccountId string `json:"account_id"`
+type Details struct {
+	AccountId string  `json:"account_id"`
+	Owner     string  `json:"owner"`
+	Balance   float64 `json:"balance"`
 }

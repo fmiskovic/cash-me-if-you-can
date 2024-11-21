@@ -5,8 +5,8 @@ import (
 
 	"github.com/softika/slogging"
 
-	"github.com/softika/gopherizer/config"
-	"github.com/softika/gopherizer/database"
+	"github.com/fmiskovic/cash-me-if-you-can/config"
+	"github.com/fmiskovic/cash-me-if-you-can/database"
 )
 
 var UpCmd = &cobra.Command{

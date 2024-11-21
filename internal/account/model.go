@@ -1,37 +1,36 @@
 package account
 
-import "github.com/softika/gopherizer/internal"
-
 type Account struct {
-	internal.Base
-
-	Email    string `db:"email"`
-	Password string `db:"password"`
+	ID      string
+	Owner   string
+	Balance float64
 }
 
-func New() *Account {
-	return &Account{}
-}
+type Option func(*Account)
 
-func (a *Account) WithId(id string) *Account {
-	a.Id = id
+func New(opts ...Option) *Account {
+	a := &Account{}
+	for _, opt := range opts {
+		opt(a)
+	}
+
 	return a
 }
 
-func (a *Account) WithEmail(email string) *Account {
-	a.Email = email
-	return a
+func WithId(id string) Option {
+	return func(a *Account) {
+		a.ID = id
+	}
 }
 
-func (a *Account) WithPassword(password string) *Account {
-	a.Password = password
-	return a
+func WithOwner(owner string) Option {
+	return func(a *Account) {
+		a.Owner = owner
+	}
 }
 
-// Identity represents the user identity
-type Identity struct {
-	AccountId string
-	Email     string
-	Password  string
-	Roles     []string
+func WithBalance(balance float64) Option {
+	return func(a *Account) {
+		a.Balance = balance
+	}
 }

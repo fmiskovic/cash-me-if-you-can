@@ -1,5 +1,7 @@
 package errorx
 
+import "errors"
+
 type ErrorType int
 
 const (
@@ -18,6 +20,13 @@ type Error struct {
 func NewError(err error, code ErrorType) *Error {
 	return &Error{
 		Err:  err,
+		Type: code,
+	}
+}
+
+func NewErrorMsg(msg string, code ErrorType) *Error {
+	return &Error{
+		Err:  errors.New(msg),
 		Type: code,
 	}
 }

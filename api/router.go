@@ -7,14 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/softika/gopherizer/config"
+	"github.com/fmiskovic/cash-me-if-you-can/config"
 )
 
 type Router struct {
 	chi.Router
 
 	environment string
-	secretKey   string
 }
 
 func NewRouter(cfg *config.Config) *Router {
@@ -24,10 +23,9 @@ func NewRouter(cfg *config.Config) *Router {
 	api := &Router{
 		Router:      r,
 		environment: cfg.App.Environment,
-		secretKey:   cfg.Auth.Secret,
 	}
 
-	s := api.initServices(cfg.Auth, api.initRepositories(cfg.Database))
+	s := api.initServices(api.initRepositories(cfg.Database))
 	h := api.initHandlers(s)
 
 	api.initRoutes(h)

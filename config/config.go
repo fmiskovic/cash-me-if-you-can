@@ -14,7 +14,6 @@ type Config struct {
 	App      AppConfig      `mapstructure:"app"`
 	Http     HTTPConfig     `mapstructure:"http"`
 	Database DatabaseConfig `mapstructure:"database" validate:"required"`
-	Auth     AuthConfig     `mapstructure:"auth"`
 }
 
 func New() (*Config, error) {
@@ -45,11 +44,6 @@ type AppConfig struct {
 	Name        string `mapstructure:"name" validate:"required"`
 	Environment string `mapstructure:"environment" validate:"required"`
 	Version     string `mapstructure:"version" validate:"required"`
-}
-
-type AuthConfig struct {
-	Secret   string        `mapstructure:"secret"`
-	TokenExp time.Duration `mapstructure:"token_exp"`
 }
 
 type HTTPConfig struct {

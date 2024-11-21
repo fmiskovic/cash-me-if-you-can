@@ -8,10 +8,10 @@ import (
 
 	"github.com/softika/slogging"
 
-	"github.com/softika/gopherizer/api"
-	"github.com/softika/gopherizer/config"
-	"github.com/softika/gopherizer/database"
-	"github.com/softika/gopherizer/pkg/testinfra"
+	"github.com/fmiskovic/cash-me-if-you-can/api"
+	"github.com/fmiskovic/cash-me-if-you-can/config"
+	"github.com/fmiskovic/cash-me-if-you-can/database"
+	"github.com/fmiskovic/cash-me-if-you-can/pkg/testinfra"
 )
 
 type E2ETestSuite struct {
@@ -35,11 +35,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.prepareDb()
 
 	cfg := &config.Config{
-		App: config.AppConfig{Environment: "test"},
-		Auth: config.AuthConfig{
-			Secret:   "test-secret-key",
-			TokenExp: 20,
-		},
+		App:      config.AppConfig{Environment: "test"},
 		Database: s.dbContainer.Config,
 	}
 	s.router = api.NewRouter(cfg)

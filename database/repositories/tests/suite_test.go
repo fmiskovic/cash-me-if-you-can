@@ -8,8 +8,8 @@ import (
 
 	"github.com/softika/slogging"
 
-	"github.com/softika/gopherizer/database"
-	"github.com/softika/gopherizer/pkg/testinfra"
+	"github.com/fmiskovic/cash-me-if-you-can/database"
+	"github.com/fmiskovic/cash-me-if-you-can/pkg/testinfra"
 )
 
 type RepositoriesTestSuite struct {
