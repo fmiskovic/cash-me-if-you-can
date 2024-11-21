@@ -17,15 +17,17 @@ Prerequisites:
 
 Clone the repository and run the following commands to start the service:
 
-
+1) **start postgres in a docker container**:
 ```bash 
 make docker-run
 ``` 
 
+2) **run the migrations**:
 ```bash
 make migrate-up
 ```
 
+3) **start the service**:
 ```bash 
 make run
 ```  
