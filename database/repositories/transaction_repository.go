@@ -47,10 +47,8 @@ func (r TransactionRepository) Create(ctx context.Context, t *transaction.Transa
 		)
 	}
 
-	var err error
-
 	// execute inside transaction and rollback on error
-	err = r.Execute(ctx, func(tx pgx.Tx) error {
+	err := r.Execute(ctx, func(tx pgx.Tx) error {
 		acc, err := r.lockAccountById(ctx, tx, t.AccountID)
 		if err != nil {
 			return err
@@ -102,9 +100,8 @@ func (r TransactionRepository) Transfer(ctx context.Context, from *transaction.T
 		)
 	}
 
-	var err error
 	// execute inside transaction and rollback on error
-	err = r.Execute(ctx, func(tx pgx.Tx) error {
+	err := r.Execute(ctx, func(tx pgx.Tx) error {
 		accFrom, err := r.lockAccountById(ctx, tx, from.AccountID)
 		if err != nil {
 			return err

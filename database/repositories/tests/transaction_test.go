@@ -96,6 +96,7 @@ func (s *RepositoriesTestSuite) TestCreateTransaction() {
 
 			// assert account balance was updated
 			accAfter, err := accRepo.Get(s.dbContainer.Ctx, tt.input.AccountID)
+			s.Assert().NoError(err)
 			balanceAfter := accAfter.Balance
 
 			if tt.input.Type == transaction.Deposit {
@@ -198,11 +199,13 @@ func (s *RepositoriesTestSuite) TestTransferTransaction() {
 
 			// assert from-account balance was updated
 			fromAccAfter, err := accountRepo.Get(s.dbContainer.Ctx, tt.from.AccountID)
+			s.Assert().NoError(err)
 			fromAccBalanceAfter := fromAccAfter.Balance
 			s.Assert().Equal(fromAccBalanceBefore-tt.from.Amount, fromAccBalanceAfter)
 
 			// assert to-account balance was updated
 			toAccAfter, err := accountRepo.Get(s.dbContainer.Ctx, tt.to.AccountID)
+			s.Assert().NoError(err)
 			toAccBalanceAfter := toAccAfter.Balance
 			s.Assert().Equal(toAccBalanceBefore+tt.to.Amount, toAccBalanceAfter)
 		})
