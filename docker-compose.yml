@@ -4,7 +4,7 @@ services:
     container_name: cash-me-if-you-can-db
     image: postgres:latest
     environment:
-      POSTGRES_DB: cash-me-if-you-can
+      POSTGRES_DB: cash-me-if-you-can-db
       POSTGRES_USER: dbadmin
       POSTGRES_PASSWORD: dbadmin
     ports:
